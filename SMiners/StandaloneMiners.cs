@@ -44,10 +44,10 @@ namespace SMiners
         protected override void Initialize()
         {
             //config
-            worldX = 300;
-            worldY = 300;
-            cellSize = 2;
-            mutationStrength = 1;
+            worldX = 1000;
+            worldY = 1000;
+            cellSize = 1;
+            mutationStrength = 2;
             rarity = 0.9999;
             batchMode = false;
             startCol = new Color(rand.Next(256), rand.Next(256), rand.Next(256));
@@ -68,6 +68,10 @@ namespace SMiners
 
         protected override void Update(GameTime gameTime)
         {
+            if (checkSet.Count == 0)
+            {
+                completed = true;
+            }
             if (completed)
             {
                 if (!saved)
@@ -96,7 +100,10 @@ namespace SMiners
 
         protected override void Draw(GameTime gameTime)
         {
+            /*
             _spriteBatch.Begin();
+
+            
             for (int x = 0; x < worldX; x++)
             {
                 for (int y = 0; y < worldY; y++)
@@ -106,8 +113,10 @@ namespace SMiners
                 }
             }
 
+
             _spriteBatch.End();
             base.Draw(gameTime);
+            */
         }
 
         private void InitWorld()
@@ -138,29 +147,35 @@ namespace SMiners
         {
             List<Miner> Changed = new() { Capacity = worldX * worldY };
             HashSet<Vector2> toWake = new();
+            HashSet<Vector2> toSleep = new();
             startCol = new Color(startCol.R + rand.Next(-mutationStrength, mutationStrength + 1), startCol.G + rand.Next(-mutationStrength, mutationStrength + 1), startCol.B + rand.Next(-mutationStrength, mutationStrength + 1));
 
-            Parallel.ForEach(checkSet, loc =>
+            foreach(Vector2 loc in checkSet)
             {
-                Miner m = (Miner) world[(int) loc.X, (int) loc.Y].DeepCopy();
+                Miner m = (Miner)world[(int)loc.X, (int)loc.Y].DeepCopy();
                 Vector2 next = m.GetNext(world);
-                m.position = next;
 
-                lock (toWake)
+                if (m.position == next)
                 {
-                    toWake.Add(next);
+                    toSleep.Add(next);
+                }
+                if (!toWake.Contains(next))
+                {
+                    m.position = next;
                 }
 
+                toWake.Add(m.position);
                 Changed.Add(m);
-            });
+            }
 
             foreach (Miner m in Changed)
             {
                 world[(int) m.position.X, (int) m.position.Y] = m;
-                m.color = startCol;
+                m.color = new Color(m.color.R + rand.Next(-mutationStrength, mutationStrength + 1), m.color.G + rand.Next(-mutationStrength, mutationStrength + 1), m.color.B + rand.Next(-mutationStrength, mutationStrength + 1));
             }
 
             checkSet = toWake;
+            checkSet.ExceptWith(toSleep);
         }
 
         private void SaveImage()
