@@ -1,16 +1,12 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using Microsoft.Xna.Framework.Input;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
-using System.IO;
-using System.Reflection;
-using System.Runtime.InteropServices;
-using System.Threading.Tasks;
-using SColor = System.Drawing.Color;
-using Bitmap = System.Drawing.Bitmap;
+using SixLabors.ImageSharp;
+using Color = Microsoft.Xna.Framework.Color;
+using SixLabors.ImageSharp.Formats.Png;
+using SixLabors.ImageSharp.PixelFormats;
 
 namespace SMiners
 {
@@ -23,7 +19,7 @@ namespace SMiners
         Miner[,] world;
         Color startCol;
         int worldX;
-        int worldY; 
+        int worldY;
         int cellSize;
         int mutationStrength;
         double rarity;
@@ -57,6 +53,9 @@ namespace SMiners
             _graphics.PreferredBackBufferWidth = worldX * cellSize;
             _graphics.SynchronizeWithVerticalRetrace = false;
             _graphics.ApplyChanges();
+
+            InactiveSleepTime = new TimeSpan(0);
+
             base.Initialize();
         }
 
@@ -72,13 +71,17 @@ namespace SMiners
             {
                 completed = true;
             }
+
             if (completed)
             {
                 if (!saved)
                 {
                     SaveImage();
                     saved = true;
+
+                    this.Exit();
                 }
+
                 if (batchMode)
                 {
                     completed = false;
@@ -94,7 +97,9 @@ namespace SMiners
             }
 
             double ms = gameTime.ElapsedGameTime.TotalMilliseconds;
-            Debug.WriteLine("fps: " + (1000 / ms) + " (" + ms + "ms)" + " iterations: " + iterations + " active " + checkSet.Count);
+            Debug.WriteLine(
+                "fps: " + (1000 / ms) + " (" + ms + "ms)" + " iterations: " + iterations + " active " + checkSet.Count
+            );
             base.Update(gameTime);
         }
 
@@ -103,7 +108,7 @@ namespace SMiners
             /*
             _spriteBatch.Begin();
 
-            
+
             for (int x = 0; x < worldX; x++)
             {
                 for (int y = 0; y < worldY; y++)
@@ -132,7 +137,7 @@ namespace SMiners
                         Miner added = new DiamondMiner(startCol, worldX, worldY);
                         world[x, y] = added;
                         world[x, y].position = new Vector2(x, y);
-                        checkSet.Add(new Vector2(x,y));
+                        checkSet.Add(new Vector2(x, y));
                     }
                     else
                     {
@@ -148,17 +153,23 @@ namespace SMiners
             List<Miner> Changed = new() { Capacity = worldX * worldY };
             HashSet<Vector2> toWake = new();
             HashSet<Vector2> toSleep = new();
-            startCol = new Color(startCol.R + rand.Next(-mutationStrength, mutationStrength + 1), startCol.G + rand.Next(-mutationStrength, mutationStrength + 1), startCol.B + rand.Next(-mutationStrength, mutationStrength + 1));
+            
+            startCol = new Color(
+                startCol.R + rand.Next(-mutationStrength, mutationStrength + 1),
+                startCol.G + rand.Next(-mutationStrength, mutationStrength + 1),
+                startCol.B + rand.Next(-mutationStrength, mutationStrength + 1)
+            );
 
-            foreach(Vector2 loc in checkSet)
+            foreach (Vector2 loc in checkSet)
             {
-                Miner m = (Miner)world[(int)loc.X, (int)loc.Y].DeepCopy();
+                Miner m = (Miner) world[(int) loc.X, (int) loc.Y].DeepCopy();
                 Vector2 next = m.GetNext(world);
 
                 if (m.position == next)
                 {
                     toSleep.Add(next);
                 }
+
                 if (!toWake.Contains(next))
                 {
                     m.position = next;
@@ -171,7 +182,11 @@ namespace SMiners
             foreach (Miner m in Changed)
             {
                 world[(int) m.position.X, (int) m.position.Y] = m;
-                m.color = new Color(m.color.R + rand.Next(-mutationStrength, mutationStrength + 1), m.color.G + rand.Next(-mutationStrength, mutationStrength + 1), m.color.B + rand.Next(-mutationStrength, mutationStrength + 1));
+                m.color = new Color(
+                    m.color.R + rand.Next(-mutationStrength, mutationStrength + 1),
+                    m.color.G + rand.Next(-mutationStrength, mutationStrength + 1),
+                    m.color.B + rand.Next(-mutationStrength, mutationStrength + 1)
+                );
             }
 
             checkSet = toWake;
@@ -180,26 +195,20 @@ namespace SMiners
 
         private void SaveImage()
         {
-            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            var img = new Image<Rgba32>(worldX, worldY);
+
+            for (int x = 0; x < worldX; x++)
             {
-                Bitmap img = new Bitmap(worldX, worldY);
-
-                for (int x = 0; x < worldX; x++)
+                for (int y = 0; y < worldY; y++)
                 {
-                    for (int y = 0; y < worldY; y++)
-                    {
-                        img.SetPixel(x, y, ConvertColor(world[x, y].color));
-                    }
+                    img[x, y] = new Rgba32(world[x, y].color.PackedValue);
                 }
-
-                img.Save(@"ScreenCap_v" + mutationStrength + "_i" + iterations + ".png", System.Drawing.Imaging.ImageFormat.Png);
             }
-        }
 
-        private SColor ConvertColor(Color col)
-        {
-            SColor sCol = SColor.FromArgb(255, col.R, col.G, col.B);
-            return sCol;
+            img.Save(
+                "ScreenCap_v" + mutationStrength + "_i" + iterations + ".png",
+                new PngEncoder()
+            );
         }
     }
 }
