@@ -53,8 +53,8 @@ namespace SMiners
             startCol = new Color(rand.Next(256), rand.Next(256), rand.Next(256));
 
             InitWorld();
-            _graphics.PreferredBackBufferHeight = 300;
-            _graphics.PreferredBackBufferWidth = 300;
+            _graphics.PreferredBackBufferHeight = worldY * cellSize;
+            _graphics.PreferredBackBufferWidth = worldX * cellSize;
             _graphics.SynchronizeWithVerticalRetrace = false;
             _graphics.ApplyChanges();
 
@@ -108,7 +108,6 @@ namespace SMiners
 
         protected override void Draw(GameTime gameTime)
         {
-            /*
             _spriteBatch.Begin();
 
             for (int x = 0; x < worldX; x++)
@@ -123,7 +122,6 @@ namespace SMiners
 
             _spriteBatch.End();
             base.Draw(gameTime);
-            */
         }
 
         private void InitWorld()
