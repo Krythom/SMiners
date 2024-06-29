@@ -5,6 +5,8 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using SixLabors.ImageSharp;
 using Color = Microsoft.Xna.Framework.Color;
+using Rectangle = Microsoft.Xna.Framework.Rectangle;
+using Point = Microsoft.Xna.Framework.Point;
 using SixLabors.ImageSharp.Formats.Png;
 using SixLabors.ImageSharp.PixelFormats;
 
@@ -14,6 +16,7 @@ namespace SMiners
     {
         private GraphicsDeviceManager _graphics;
         private SpriteBatch _spriteBatch;
+        List<Miner> _changed;
         readonly Random rand = new();
         Texture2D square;
         Miner[,] world;
@@ -35,6 +38,7 @@ namespace SMiners
             Content.RootDirectory = "Content";
             IsMouseVisible = true;
             IsFixedTimeStep = false;
+            _changed = new List<Miner> { Capacity = worldX * worldY };
         }
 
         protected override void Initialize()
@@ -43,14 +47,14 @@ namespace SMiners
             worldX = 1000;
             worldY = 1000;
             cellSize = 1;
-            mutationStrength = 2;
+            mutationStrength = 1;
             rarity = 0.9999;
             batchMode = false;
             startCol = new Color(rand.Next(256), rand.Next(256), rand.Next(256));
 
             InitWorld();
-            _graphics.PreferredBackBufferHeight = worldY * cellSize;
-            _graphics.PreferredBackBufferWidth = worldX * cellSize;
+            _graphics.PreferredBackBufferHeight = 300;
+            _graphics.PreferredBackBufferWidth = 300;
             _graphics.SynchronizeWithVerticalRetrace = false;
             _graphics.ApplyChanges();
 
@@ -78,17 +82,16 @@ namespace SMiners
                 {
                     SaveImage();
                     saved = true;
-
+                }
+                if (!batchMode)
+                {
                     this.Exit();
                 }
 
-                if (batchMode)
-                {
-                    completed = false;
-                    saved = false;
-                    Initialize();
-                    iterations = 0;
-                }
+                completed = false;
+                saved = false;
+                Initialize();
+                iterations = 0;
             }
             else
             {
@@ -107,7 +110,6 @@ namespace SMiners
         {
             /*
             _spriteBatch.Begin();
-
 
             for (int x = 0; x < worldX; x++)
             {
@@ -150,7 +152,6 @@ namespace SMiners
 
         private void Iterate()
         {
-            List<Miner> Changed = new() { Capacity = worldX * worldY };
             HashSet<Vector2> toWake = new();
             HashSet<Vector2> toSleep = new();
             
@@ -176,21 +177,18 @@ namespace SMiners
                 }
 
                 toWake.Add(m.position);
-                Changed.Add(m);
+                _changed.Add(m);
             }
 
-            foreach (Miner m in Changed)
+            foreach (Miner m in _changed)
             {
-                world[(int) m.position.X, (int) m.position.Y] = m;
-                m.color = new Color(
-                    m.color.R + rand.Next(-mutationStrength, mutationStrength + 1),
-                    m.color.G + rand.Next(-mutationStrength, mutationStrength + 1),
-                    m.color.B + rand.Next(-mutationStrength, mutationStrength + 1)
-                );
+                world[(int)m.position.X, (int)m.position.Y] = m;
+                m.color = startCol;
             }
 
             checkSet = toWake;
             checkSet.ExceptWith(toSleep);
+            _changed.Clear();
         }
 
         private void SaveImage()
