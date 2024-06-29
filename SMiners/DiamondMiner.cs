@@ -20,7 +20,7 @@ namespace SMiners
             yMax = worldY;
         }
 
-        public override Vector2 GetNext(Miner[,] world)
+        public override Point GetNext(Miner[,] world)
         {
             int jumpsize = 1;
             Miner next = DecideMove(world);
@@ -45,14 +45,6 @@ namespace SMiners
             if (m_neg.type != MinerType.Diamond) return m_neg;
 
             return (rand.Next(2) == 1) ? m_pos : m_neg ;
-        }
-
-        private Miner GetFront(Miner[,] world, int distance)
-        {
-            Vector2 target = position + dir_lut[(int) direction] * distance;
-            target.X = Mod((int) target.X, xMax);
-            target.Y = Mod((int) target.Y, yMax);
-            return world[(int) target.X, (int) target.Y];
         }
     }
 }

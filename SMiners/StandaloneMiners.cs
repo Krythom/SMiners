@@ -9,6 +9,7 @@ using Rectangle = Microsoft.Xna.Framework.Rectangle;
 using Point = Microsoft.Xna.Framework.Point;
 using SixLabors.ImageSharp.Formats.Png;
 using SixLabors.ImageSharp.PixelFormats;
+using Microsoft.Xna.Framework.Input;
 
 namespace SMiners
 {
@@ -30,7 +31,7 @@ namespace SMiners
         bool completed = false;
         bool saved = false;
         int iterations = 0;
-        HashSet<Vector2> checkSet = new();
+        HashSet<Point> checkSet = new();
 
         public StandaloneMiners()
         {
@@ -48,13 +49,13 @@ namespace SMiners
             worldY = 1000;
             cellSize = 1;
             mutationStrength = 1;
-            rarity = 0.9999;
+            rarity = 0.99999;
             batchMode = false;
             startCol = new Color(rand.Next(256), rand.Next(256), rand.Next(256));
 
             InitWorld();
-            _graphics.PreferredBackBufferHeight = worldY * cellSize;
-            _graphics.PreferredBackBufferWidth = worldX * cellSize;
+            _graphics.PreferredBackBufferHeight = (worldY * cellSize);
+            _graphics.PreferredBackBufferWidth = (worldX * cellSize);
             _graphics.SynchronizeWithVerticalRetrace = false;
             _graphics.ApplyChanges();
 
@@ -80,12 +81,13 @@ namespace SMiners
             {
                 if (!saved)
                 {
+                    Cleanup();
                     SaveImage();
                     saved = true;
                 }
                 if (!batchMode)
                 {
-                    this.Exit();
+                    Exit();
                 }
 
                 completed = false;
@@ -99,10 +101,18 @@ namespace SMiners
                 iterations++;
             }
 
+
+            if(iterations % 100 != 0)
+            {
+                SuppressDraw();
+            }
+
             double ms = gameTime.ElapsedGameTime.TotalMilliseconds;
             Debug.WriteLine(
                 "fps: " + (1000 / ms) + " (" + ms + "ms)" + " iterations: " + iterations + " active " + checkSet.Count
             );
+
+
             base.Update(gameTime);
         }
 
@@ -136,13 +146,13 @@ namespace SMiners
                     {
                         Miner added = new DiamondMiner(startCol, worldX, worldY);
                         world[x, y] = added;
-                        world[x, y].position = new Vector2(x, y);
-                        checkSet.Add(new Vector2(x, y));
+                        world[x, y].position = new Point(x, y);
+                        checkSet.Add(new Point(x, y));
                     }
                     else
                     {
-                        world[x, y] = new Ore();
-                        world[x, y].position = new Vector2(x, y);
+                        world[x, y] = new Ore(worldX, worldY);
+                        world[x, y].position = new Point(x, y);
                     }
                 }
             }
@@ -150,8 +160,8 @@ namespace SMiners
 
         private void Iterate()
         {
-            HashSet<Vector2> toWake = new();
-            HashSet<Vector2> toSleep = new();
+            HashSet<Point> toWake = new();
+            HashSet<Point> toSleep = new();
             
             startCol = new Color(
                 startCol.R + rand.Next(-mutationStrength, mutationStrength + 1),
@@ -159,10 +169,10 @@ namespace SMiners
                 startCol.B + rand.Next(-mutationStrength, mutationStrength + 1)
             );
 
-            foreach (Vector2 loc in checkSet)
+            foreach (Point loc in checkSet)
             {
                 Miner m = (Miner) world[(int) loc.X, (int) loc.Y].DeepCopy();
-                Vector2 next = m.GetNext(world);
+                Point next = m.GetNext(world);
 
                 if (m.position == next)
                 {
@@ -189,6 +199,32 @@ namespace SMiners
             _changed.Clear();
         }
 
+        private void Cleanup()
+        {
+            List<Miner> neighbors;
+            for (int x = 0; x < worldX;  x++)
+            {
+                for (int y = 0; y < worldY; y++)
+                {
+                    Miner current = world[x, y];
+                    neighbors = current.GetNeumann(world);
+                    int lowest = 999;
+                    foreach (Miner m in neighbors)
+                    {
+                        int colorDist = Math.Abs(m.color.R - current.color.R) + Math.Abs(m.color.G - current.color.G) + Math.Abs(m.color.B - current.color.B);
+                        if (colorDist < lowest)
+                        {
+                            lowest = colorDist;
+                        }
+                    }
+                    if (lowest > 3 * mutationStrength)
+                    {
+                        current.color = neighbors[rand.Next(4)].color;
+                    }
+                }
+            }
+        }
+
         private void SaveImage()
         {
             var img = new Image<Rgba32>(worldX, worldY);
@@ -202,7 +238,7 @@ namespace SMiners
             }
 
             img.Save(
-                "ScreenCap_v" + mutationStrength + "_i" + iterations + ".png",
+                "ScreenCap_v" + rand.Next(10) + "_i" + iterations + ".png",
                 new PngEncoder()
             );
         }

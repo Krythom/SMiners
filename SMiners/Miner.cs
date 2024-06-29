@@ -1,5 +1,6 @@
 ﻿using Microsoft.Xna.Framework;
 using System;
+using System.Collections.Generic;
 
 namespace SMiners
 {
@@ -7,13 +8,13 @@ namespace SMiners
     {
         public MinerType type;
         public Direction direction;
-        public Vector2[] dir_lut = { new Vector2(0, -1), new Vector2(1, 0), new Vector2(0, 1), new Vector2(-1, 0) };
-        public Vector2 position;
+        public Point[] dir_lut = { new Point(0, -1), new Point(1, 0), new Point(0, 1), new Point(-1, 0) };
+        public Point position;
         public int xMax;
         public int yMax;
         public Color color;
 
-        public abstract Vector2 GetNext(Miner[,] world);
+        public abstract Point GetNext(Miner[,] world);
 
         public object DeepCopy()
         {
@@ -24,6 +25,51 @@ namespace SMiners
             copy.yMax = yMax;
             copy.xMax = xMax;
             return copy;
+        }
+
+        protected Miner GetFront(Miner[,] world, int distance)
+        {
+            Point dir = dir_lut[(int)direction];
+            Point target = new Point(position.X + dir.X * distance, position.Y + dir.Y * distance);
+            target.X = Mod(target.X, xMax);
+            target.Y = Mod(target.Y, yMax);
+            return world[target.X, target.Y];
+        }
+
+        public List<Miner> GetMoore(Miner[,] world)
+        {
+            List<Miner> neighbors = new List<Miner>();
+
+            for (int x = -1; x <= 1; x++)
+            {
+                for (int y = -1; y <= 1; y++)
+                {
+                    if (!(x == 0 && y == 0))
+                    {
+                        neighbors.Add(world[Mod(position.X + x, xMax), Mod(position.Y + y, yMax)]);
+                    }
+                }
+            }
+
+            return neighbors;
+        }
+
+        public List<Miner> GetNeumann(Miner[,] world)
+        {
+            List<Miner> neighbors = new List<Miner>();
+
+            for (int x = -1; x <= 1; x++)
+            {
+                for (int y = -1; y <= 1; y++)
+                {
+                    if (x != y)
+                    {
+                        neighbors.Add(world[Mod(position.X + x, xMax), Mod(position.Y + y, yMax)]);
+                    }
+                }
+            }
+
+            return neighbors;
         }
 
         public static int Mod(int x, int m)
