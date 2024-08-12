@@ -1,15 +1,11 @@
-﻿using Microsoft.Xna.Framework;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System;
+using Microsoft.Xna.Framework;
 
 namespace SMiners
 {
     internal class EightMiner : Miner
     {
-        Random rand;
+        private readonly Random rand;
 
         public EightMiner(Color col, int worldX, int worldY, int x, int y, int seed)
         {

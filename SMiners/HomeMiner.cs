@@ -1,16 +1,13 @@
-﻿using Microsoft.Xna.Framework;
-using System;
+﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using Microsoft.Xna.Framework;
 
 namespace SMiners
 {
     internal class HomeMiner : Miner
     {
-        Random rand;
-        Point home;
+        private readonly Random rand;
+        private readonly Point home;
 
         public HomeMiner(Color col, int worldX, int worldY, int x, int y, int seed)
         {

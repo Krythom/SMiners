@@ -1,3 +1,4 @@
-﻿
-using var game = new SMiners.StandaloneMiners();
+﻿using SMiners;
+
+using var game = new StandaloneMiners();
 game.Run();

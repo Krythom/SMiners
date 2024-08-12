@@ -1,26 +1,26 @@
-﻿using Microsoft.Xna.Framework;
-using System;
+﻿using System;
 using System.Collections.Generic;
+using Microsoft.Xna.Framework;
 
 namespace SMiners
 {
-    abstract class Miner
+    internal abstract class Miner
     {
         public MinerType type;
-        public Direction direction;
-        public EightDirection eDirection;
+        protected Direction direction;
+        protected EightDirection eDirection;
         private static readonly Point[] dir_lut = { new(0, -1), new(1, 0), new(0, 1), new(-1, 0) };
         private static readonly Point[] edir_lut = { new(0, -1), new(1, -1), new(1, 0), new(1, 1), new(0,1), new(-1,1), new(-1,0), new(-1,-1) };
         public Point position;
-        public int xMax;
-        public int yMax;
+        protected int xMax;
+        protected int yMax;
         public Color color;
 
         public abstract Point GetNext(Miner[,] world);
 
         public object DeepCopy()
         {
-            Miner copy = (Miner) this.MemberwiseClone();
+            Miner copy = (Miner) MemberwiseClone();
             copy.direction = direction;
             copy.position = position;
             copy.color = color;
@@ -37,6 +37,7 @@ namespace SMiners
             target.Y = Mod(target.Y, yMax);
             return world[target.X, target.Y];
         }
+        
         protected Miner GetFrontEight(Miner[,] world, int distance)
         {
             Point dir = edir_lut[(int)eDirection];
@@ -64,7 +65,7 @@ namespace SMiners
             return neighbors;
         }
 
-        public List<Miner> GetNeumann(Miner[,] world)
+        protected List<Miner> GetNeumann(Miner[,] world)
         {
             List<Miner> neighbors = new List<Miner>();
 
@@ -82,7 +83,7 @@ namespace SMiners
             return neighbors;
         }
 
-        public static int Mod(int x, int m)
+        private static int Mod(int x, int m)
         {
             return (Math.Abs(x * m) + x) % m;
         }

@@ -1,38 +1,37 @@
-﻿using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Graphics;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using CommunityToolkit.HighPerformance;
+using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
 using SixLabors.ImageSharp;
-using Color = Microsoft.Xna.Framework.Color;
-using Point = Microsoft.Xna.Framework.Point;
 using SixLabors.ImageSharp.Formats.Png;
 using SixLabors.ImageSharp.PixelFormats;
+using Color = Microsoft.Xna.Framework.Color;
+using Point = Microsoft.Xna.Framework.Point;
 
 namespace SMiners
 {
     public class StandaloneMiners : Game
     {
-        private GraphicsDeviceManager _graphics;
+        private readonly GraphicsDeviceManager _graphics;
         private SpriteBatch _spriteBatch;
-        List<Miner> _changed;
+        private readonly List<Miner> _changed;
         private Texture2D _tex;
-        int seed;
-        Random rand;
-        Texture2D square;
-        Miner[,] world;
-        Color startCol;
-        int worldX;
-        int worldY;
-        int cellSize;
-        int mutationStrength;
-        double rarity;
-        bool batchMode;
-        bool completed = false;
-        bool saved = false;
-        int iterations = 0;
-        HashSet<Point> checkSet = new();
+        private int seed;
+        private Random rand;
+        private Texture2D square;
+        private Miner[,] world;
+        private Color startCol;
+        private int worldX;
+        private int worldY;
+        private int mutationStrength;
+        private double rarity;
+        private bool batchMode;
+        private bool completed;
+        private bool saved;
+        private int iterations;
+        private HashSet<Point> checkSet = new();
         private Color[] _backingColors;
         private Memory2D<Color> _colors;
 
@@ -52,7 +51,6 @@ namespace SMiners
             rand = new Random(seed);
             worldX = 1000;
             worldY = 1000;
-            cellSize = 1;
             mutationStrength = 1;
             rarity = 0.9999;
             batchMode = true;
