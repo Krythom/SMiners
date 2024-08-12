@@ -3,15 +3,12 @@ using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Runtime.CompilerServices;
 using CommunityToolkit.HighPerformance;
 using SixLabors.ImageSharp;
 using Color = Microsoft.Xna.Framework.Color;
-using Rectangle = Microsoft.Xna.Framework.Rectangle;
 using Point = Microsoft.Xna.Framework.Point;
 using SixLabors.ImageSharp.Formats.Png;
 using SixLabors.ImageSharp.PixelFormats;
-using Microsoft.Xna.Framework.Input;
 
 namespace SMiners
 {
@@ -20,7 +17,6 @@ namespace SMiners
         private GraphicsDeviceManager _graphics;
         private SpriteBatch _spriteBatch;
         List<Miner> _changed;
-        Random seeder = new Random();
         private Texture2D _tex;
         int seed;
         Random rand;
@@ -52,7 +48,7 @@ namespace SMiners
         protected override void Initialize()
         {
             //config
-            seed = seeder.Next();
+            seed = Environment.TickCount;
             rand = new Random(seed);
             worldX = 1000;
             worldY = 1000;
@@ -225,19 +221,19 @@ namespace SMiners
         private Color RandomShift(Color col)
         {
             return new Color(
-            col.R + seeder.Next(-mutationStrength, mutationStrength + 1),
-            col.G + seeder.Next(-mutationStrength, mutationStrength + 1),
-            col.B + seeder.Next(-mutationStrength, mutationStrength + 1)
+                col.R + rand.Next(-mutationStrength, mutationStrength + 1),
+                col.G + rand.Next(-mutationStrength, mutationStrength + 1),
+                col.B + rand.Next(-mutationStrength, mutationStrength + 1)
             );
         }
 
         private Color ConnectedShift(Color col)
         {
-            int change = seeder.Next(-mutationStrength, mutationStrength + 1);
+            int change = rand.Next(-mutationStrength, mutationStrength + 1);
             return new Color(
-            col.R + change,
-            col.G + change,
-            col.B + change
+                col.R + change,
+                col.G + change,
+                col.B + change
             );
         }
 
