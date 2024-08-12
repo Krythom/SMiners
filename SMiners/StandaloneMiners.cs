@@ -94,6 +94,10 @@ namespace SMiners
                 _saved = false;
 
                 Initialize();
+
+                foreach (ref Color c in _backingColors.AsSpan())
+                    c = Color.Black;
+                
                 _iterations = 0;
             }
             else
