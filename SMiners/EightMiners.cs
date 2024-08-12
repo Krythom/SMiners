@@ -1,53 +1,52 @@
-﻿using Microsoft.Xna.Framework;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System;
+using Microsoft.Xna.Framework;
 
 namespace SMiners
 {
     internal class EightMiner : Miner
     {
-        Random rand;
-
-        public EightMiner(Color col, int worldX, int worldY, int x, int y, int seed)
+        public EightMiner(Color col, int worldX, int worldY, int x, int y, Random random)
         {
-            color = col;
+            Color = col;
             eDirection = EightDirection.U;
-            type = MinerType.Eight;
-            xMax = worldX;
-            yMax = worldY;
-            rand = new Random(seed);
-            position = new Point(x, y);
+            Type = MinerType.Eight;
+            _xMax = worldX;
+            _yMax = worldY;
+            Position = new Point(x, y);
         }
 
-        public override Point GetNext(Miner[,] world)
+        public override Point GetNext(Miner[,] world, Random rand)
         {
-            int jumpsize = 1;
-            Miner next = DecideMove(world);
+            int jumpDist = 1;
+            
+            Miner next = DecideMove(world, rand);
 
-            while (next.type != MinerType.Ore && next.position != position)
+            while (next.Type != MinerType.Ore && next.Position != Position)
             {
-                jumpsize++;
-                next = GetFrontEight(world, jumpsize);
+                jumpDist++;
+                next = GetFrontEight(world, jumpDist);
             }
 
-            return next.position;
+            return next.Position;
         }
 
-        private Miner DecideMove(Miner[,] world)
+        private Miner DecideMove(Miner[,] world, Random rand)
         {
-            eDirection = (EightDirection)(((int)eDirection + 1) % 8);
+            eDirection = eDirection.Next();
 
             Miner m_pos = GetFrontEight(world, 1);
-            if (m_pos.type == MinerType.Ore) return m_pos;
+            if (m_pos.Type == MinerType.Ore) 
+                return m_pos;
 
-            eDirection = (EightDirection)(((int)eDirection + 1) % 8);
+            eDirection = eDirection.Next();
+            
             Miner m_neg = GetFrontEight(world, 1);
-            if (m_neg.type == MinerType.Ore) return m_neg;
+            if (m_neg.Type == MinerType.Ore) 
+                return m_neg;
 
-            return (rand.Next(2) == 1) ? m_pos : m_neg;
+            return rand.Next(2) == 1 
+                ? m_pos 
+                : m_neg;
         }
     }
 }

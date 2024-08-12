@@ -1,53 +1,52 @@
-﻿using Microsoft.Xna.Framework;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System;
+using Microsoft.Xna.Framework;
 
 namespace SMiners
 {
     internal class DiamondMiner : Miner
     {
-        Random rand;
-
-        public DiamondMiner(Color col, int worldX, int worldY, int x, int y, int seed)
+        public DiamondMiner(Color col, int worldX, int worldY, int x, int y)
         {
-            color = col;
+            Color = col;
             direction = Direction.Up;
-            type = MinerType.Diamond;
-            xMax = worldX;
-            yMax = worldY;
-            rand = new Random(seed);
-            position = new Point(x, y);
+            Type = MinerType.Diamond;
+            _xMax = worldX;
+            _yMax = worldY;
+            Position = new Point(x, y);
         }
 
-        public override Point GetNext(Miner[,] world)
+        public override Point GetNext(Miner[,] world, Random rand)
         {
-            int jumpsize = 1;
-            Miner next = DecideMove(world);
+            int jumpDist = 1;
 
-            while (next.type != MinerType.Ore && next.position != position)
+            Miner next = DecideMove(world, rand);
+
+            while (next.Type != MinerType.Ore && next.Position != Position)
             {
-                jumpsize++;
-                next = GetFront(world, jumpsize);
+                jumpDist++;
+                next = GetFront(world, jumpDist);
             }
 
-            return next.position;
+            return next.Position;
         }
 
-        private Miner DecideMove(Miner[,] world)
+        private Miner DecideMove(Miner[,] world, Random rng)
         {
-            direction = (Direction)(((int)direction + 1) % 4);
+            direction = direction.Next();
 
             Miner m_pos = GetFront(world, 1);
-            if (m_pos.type != MinerType.Diamond) return m_pos;
+            if (m_pos.Type != MinerType.Diamond)
+                return m_pos;
 
-            direction = (Direction)(((int)direction + 2) % 4);
+            direction = direction.Next(2);
+            
             Miner m_neg = GetFront(world, 1);
-            if (m_neg.type != MinerType.Diamond) return m_neg;
+            if (m_neg.Type != MinerType.Diamond)
+                return m_neg;
 
-            return (rand.Next(2) == 1) ? m_pos : m_neg ;
+            return rng.Next(2) == 1 
+                ? m_pos 
+                : m_neg;
         }
     }
 }

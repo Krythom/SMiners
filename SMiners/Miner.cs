@@ -1,54 +1,77 @@
-﻿using Microsoft.Xna.Framework;
-using System;
+﻿using System;
 using System.Collections.Generic;
+using Microsoft.Xna.Framework;
 
 namespace SMiners
 {
-    abstract class Miner
+    public abstract class Miner
     {
-        public MinerType type;
-        public Direction direction;
-        public EightDirection eDirection;
-        public Point[] dir_lut = { new Point(0, -1), new Point(1, 0), new Point(0, 1), new Point(-1, 0) };
-        public Point[] edir_lut = { new Point(0, -1), new Point(1, -1), new Point(1, 0), new Point(1, 1), new Point(0,1), new Point(-1,1), new Point(-1,0), new Point(-1,-1) };
-        public Point position;
-        public int xMax;
-        public int yMax;
-        public Color color;
+        private static readonly Point[] _Cardinals =
+        {
+            new(0, -1),
+            new(1, 0),
+            new(0, 1),
+            new(-1, 0)
+        };
 
-        public abstract Point GetNext(Miner[,] world);
+        private static readonly Point[] _ExtendedCardinals =
+        {
+            new(0, -1),
+            new(1, -1),
+            new(1, 0),
+            new(1, 1),
+            new(0, 1),
+            new(-1, 1),
+            new(-1, 0),
+            new(-1, -1)
+        };
+
+        public MinerType Type;
+        public Point Position;
+        public Color Color;
+        
+        protected Direction direction;
+        protected EightDirection eDirection;
+        
+        protected int _xMax;
+        protected int _yMax;
+
+        public abstract Point GetNext(Miner[,] world, Random rand);
 
         public object DeepCopy()
         {
-            Miner copy = (Miner) this.MemberwiseClone();
+            Miner copy = (Miner) MemberwiseClone();
             copy.direction = direction;
-            copy.position = position;
-            copy.color = color;
-            copy.yMax = yMax;
-            copy.xMax = xMax;
+            copy.Position = Position;
+            copy.Color = Color;
+            copy._yMax = _yMax;
+            copy._xMax = _xMax;
             return copy;
         }
 
         protected Miner GetFront(Miner[,] world, int distance)
         {
-            Point dir = dir_lut[(int)direction];
-            Point target = new Point(position.X + dir.X * distance, position.Y + dir.Y * distance);
-            target.X = Mod(target.X, xMax);
-            target.Y = Mod(target.Y, yMax);
-            return world[target.X, target.Y];
+            Point dir = _Cardinals[(int) direction];
+            
+            return world[
+                Mod(Position.X + dir.X * distance, _xMax),
+                Mod(Position.Y + dir.Y * distance, _yMax)
+            ];
         }
+
         protected Miner GetFrontEight(Miner[,] world, int distance)
         {
-            Point dir = edir_lut[(int)eDirection];
-            Point target = new Point(position.X + dir.X * distance, position.Y + dir.Y * distance);
-            target.X = Mod(target.X, xMax);
-            target.Y = Mod(target.Y, yMax);
-            return world[target.X, target.Y];
+            Point dir = _ExtendedCardinals[(int) eDirection];
+            
+            return world[
+                Mod(Position.X + dir.X * distance, _xMax),
+                Mod(Position.Y + dir.Y * distance, _yMax)
+            ];
         }
 
         public List<Miner> GetMoore(Miner[,] world)
         {
-            List<Miner> neighbors = new List<Miner>();
+            var neighbors = new List<Miner>();
 
             for (int x = -1; x <= 1; x++)
             {
@@ -56,7 +79,7 @@ namespace SMiners
                 {
                     if (!(x == 0 && y == 0))
                     {
-                        neighbors.Add(world[Mod(position.X + x, xMax), Mod(position.Y + y, yMax)]);
+                        neighbors.Add(world[Mod(Position.X + x, _xMax), Mod(Position.Y + y, _yMax)]);
                     }
                 }
             }
@@ -64,9 +87,9 @@ namespace SMiners
             return neighbors;
         }
 
-        public List<Miner> GetNeumann(Miner[,] world)
+        protected List<Miner> GetNeumann(Miner[,] world)
         {
-            List<Miner> neighbors = new List<Miner>();
+            var neighbors = new List<Miner>();
 
             for (int x = -1; x <= 1; x++)
             {
@@ -74,7 +97,7 @@ namespace SMiners
                 {
                     if (x != y && x != -y)
                     {
-                        neighbors.Add(world[Mod(position.X + x, xMax), Mod(position.Y + y, yMax)]);
+                        neighbors.Add(world[Mod(Position.X + x, _xMax), Mod(Position.Y + y, _yMax)]);
                     }
                 }
             }
@@ -82,7 +105,7 @@ namespace SMiners
             return neighbors;
         }
 
-        public static int Mod(int x, int m)
+        private static int Mod(int x, int m)
         {
             return (Math.Abs(x * m) + x) % m;
         }
@@ -102,6 +125,7 @@ namespace SMiners
             Down,
             Left
         }
+
         public enum EightDirection
         {
             U,
