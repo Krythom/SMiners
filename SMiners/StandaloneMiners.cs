@@ -3,6 +3,8 @@ using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Runtime.CompilerServices;
+using CommunityToolkit.HighPerformance;
 using SixLabors.ImageSharp;
 using Color = Microsoft.Xna.Framework.Color;
 using Rectangle = Microsoft.Xna.Framework.Rectangle;
@@ -19,6 +21,7 @@ namespace SMiners
         private SpriteBatch _spriteBatch;
         List<Miner> _changed;
         Random seeder = new Random();
+        private Texture2D _tex;
         int seed;
         Random rand;
         Texture2D square;
@@ -34,6 +37,8 @@ namespace SMiners
         bool saved = false;
         int iterations = 0;
         HashSet<Point> checkSet = new();
+        private Color[] _backingColors;
+        private Memory2D<Color> _colors;
 
         public StandaloneMiners()
         {
@@ -105,11 +110,6 @@ namespace SMiners
                 iterations++;
             }
 
-            if(iterations % 100 != 0)
-            {
-                SuppressDraw();
-            }
-
             double ms = gameTime.ElapsedGameTime.TotalMilliseconds;
             Debug.WriteLine(
                 "fps: " + (1000 / ms) + " (" + ms + "ms)" + " iterations: " + iterations + " active " + checkSet.Count
@@ -122,23 +122,20 @@ namespace SMiners
         {
             _spriteBatch.Begin();
 
-            for (int x = 0; x < worldX; x++)
-            {
-                for (int y = 0; y < worldY; y++)
-                {
-                    Rectangle squarePos = new(new Point((x * cellSize), (y * cellSize)), new Point(cellSize, cellSize));
-                    _spriteBatch.Draw(square, squarePos, world[x, y].color);
-                }
-            }
-
+            _tex.SetData(_backingColors);
+            _spriteBatch.Draw(_tex, new Vector2(0, 0), Color.White);
 
             _spriteBatch.End();
+            
             base.Draw(gameTime);
         }
 
         private void InitWorld()
         {
             world = new Miner[worldX, worldY];
+            _backingColors = new Color[worldX * worldY];
+            _colors = new Memory2D<Color>(_backingColors, worldX, worldY);
+            _tex = new Texture2D(GraphicsDevice, worldX, worldY);
 
             for (int x = 0; x < worldX; x++)
             {
@@ -185,10 +182,13 @@ namespace SMiners
                 _changed.Add(m);
             }
 
+            var colors = _colors.Span;
+
             foreach (Miner m in _changed)
             {
-                world[m.position.X, m.position.Y] = m;
-                m.color = startCol;
+                var (x, y) = m.position;
+                world[x, y] = m;
+                colors[x, y] = m.color = startCol;
             }
 
             checkSet = toWake;
