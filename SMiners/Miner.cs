@@ -4,7 +4,7 @@ using Microsoft.Xna.Framework;
 
 namespace SMiners
 {
-    internal abstract class Miner
+    public abstract class Miner
     {
         public MinerType type;
         protected Direction direction;
@@ -103,6 +103,7 @@ namespace SMiners
             Down,
             Left
         }
+        
         public enum EightDirection
         {
             U,
@@ -114,5 +115,6 @@ namespace SMiners
             L,
             UL
         }
+
     }
 }

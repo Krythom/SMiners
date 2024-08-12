@@ -202,10 +202,9 @@ namespace SMiners
                     foreach (Miner m in neighbors)
                     {
                         int colorDist = Math.Abs(m.color.R - current.color.R) + Math.Abs(m.color.G - current.color.G) + Math.Abs(m.color.B - current.color.B);
-                        if (colorDist < lowest)
-                        {
-                            lowest = colorDist;
-                        }
+
+                        lowest = Math.Max(colorDist, lowest);
+                        
                     }
                     if (lowest > 3 * mutationStrength)
                     {

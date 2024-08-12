@@ -31,12 +31,12 @@ namespace SMiners
 
         private Miner DecideMove(Miner[,] world, Random rng)
         {
-            direction = (Direction)(((int)direction + 1) % 4);
+            direction = direction.Next();
 
             Miner m_pos = GetFront(world, 1);
             if (m_pos.type != MinerType.Diamond) return m_pos;
 
-            direction = (Direction)(((int)direction + 2) % 4);
+            direction = direction.Next(2);
             Miner m_neg = GetFront(world, 1);
             if (m_neg.type != MinerType.Diamond) return m_neg;
 

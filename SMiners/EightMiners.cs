@@ -31,12 +31,12 @@ namespace SMiners
 
         private Miner DecideMove(Miner[,] world, Random rand)
         {
-            eDirection = (EightDirection)(((int)eDirection + 1) % 8);
+            eDirection = eDirection.Next();
 
             Miner m_pos = GetFrontEight(world, 1);
             if (m_pos.type == MinerType.Ore) return m_pos;
 
-            eDirection = (EightDirection)(((int)eDirection + 1) % 8);
+            eDirection = eDirection.Next();
             Miner m_neg = GetFrontEight(world, 1);
             if (m_neg.type == MinerType.Ore) return m_neg;
 
