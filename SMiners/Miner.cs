@@ -9,8 +9,8 @@ namespace SMiners
         public MinerType type;
         public Direction direction;
         public EightDirection eDirection;
-        public Point[] dir_lut = { new Point(0, -1), new Point(1, 0), new Point(0, 1), new Point(-1, 0) };
-        public Point[] edir_lut = { new Point(0, -1), new Point(1, -1), new Point(1, 0), new Point(1, 1), new Point(0,1), new Point(-1,1), new Point(-1,0), new Point(-1,-1) };
+        private static readonly Point[] dir_lut = { new(0, -1), new(1, 0), new(0, 1), new(-1, 0) };
+        private static readonly Point[] edir_lut = { new(0, -1), new(1, -1), new(1, 0), new(1, 1), new(0,1), new(-1,1), new(-1,0), new(-1,-1) };
         public Point position;
         public int xMax;
         public int yMax;
