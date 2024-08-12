@@ -1,4 +1,5 @@
-﻿using Microsoft.Xna.Framework;
+﻿using System;
+using Microsoft.Xna.Framework;
 
 namespace SMiners
 {
@@ -13,7 +14,7 @@ namespace SMiners
             yMax = worldY;
         }
 
-        public override Point GetNext(Miner[,] world)
+        public override Point GetNext(Miner[,] world, Random rand)
         {
             return position;
         }

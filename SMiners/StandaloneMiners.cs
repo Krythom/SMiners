@@ -136,7 +136,7 @@ namespace SMiners
                 {
                     if (rand.NextDouble() > rarity)
                     {
-                        Miner added = new EightMiner(startCol, worldX, worldY, x, y, rand.Next());
+                        Miner added = new EightMiner(startCol, worldX, worldY, x, y, rand);
                         world[x, y] = added;
                         checkSet.Add(new Point(x, y));
                     }
@@ -159,7 +159,7 @@ namespace SMiners
             foreach (Point loc in checkSet)
             {
                 Miner m = (Miner) world[loc.X, loc.Y].DeepCopy();
-                Point next = m.GetNext(world);
+                Point next = m.GetNext(world, rand);
 
                 if (m.position == next)
                 {

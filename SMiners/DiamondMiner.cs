@@ -5,23 +5,20 @@ namespace SMiners
 {
     internal class DiamondMiner : Miner
     {
-        private readonly Random rand;
-
-        public DiamondMiner(Color col, int worldX, int worldY, int x, int y, int seed)
+        public DiamondMiner(Color col, int worldX, int worldY, int x, int y)
         {
             color = col;
             direction = Direction.Up;
             type = MinerType.Diamond;
             xMax = worldX;
             yMax = worldY;
-            rand = new Random(seed);
             position = new Point(x, y);
         }
 
-        public override Point GetNext(Miner[,] world)
+        public override Point GetNext(Miner[,] world, Random rand)
         {
             int jumpsize = 1;
-            Miner next = DecideMove(world);
+            Miner next = DecideMove(world, rand);
 
             while (next.type != MinerType.Ore && next.position != position)
             {
@@ -32,7 +29,7 @@ namespace SMiners
             return next.position;
         }
 
-        private Miner DecideMove(Miner[,] world)
+        private Miner DecideMove(Miner[,] world, Random rng)
         {
             direction = (Direction)(((int)direction + 1) % 4);
 
@@ -43,7 +40,7 @@ namespace SMiners
             Miner m_neg = GetFront(world, 1);
             if (m_neg.type != MinerType.Diamond) return m_neg;
 
-            return (rand.Next(2) == 1) ? m_pos : m_neg ;
+            return (rng.Next(2) == 1) ? m_pos : m_neg ;
         }
     }
 }

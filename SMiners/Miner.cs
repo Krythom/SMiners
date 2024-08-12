@@ -16,7 +16,7 @@ namespace SMiners
         protected int yMax;
         public Color color;
 
-        public abstract Point GetNext(Miner[,] world);
+        public abstract Point GetNext(Miner[,] world, Random rand);
 
         public object DeepCopy()
         {

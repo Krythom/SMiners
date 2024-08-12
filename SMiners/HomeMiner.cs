@@ -6,25 +6,23 @@ namespace SMiners
 {
     internal class HomeMiner : Miner
     {
-        private readonly Random rand;
         private readonly Point home;
 
-        public HomeMiner(Color col, int worldX, int worldY, int x, int y, int seed)
+        public HomeMiner(Color col, int worldX, int worldY, int x, int y)
         {
             color = col;
             direction = Direction.Up;
             type = MinerType.Home;
             xMax = worldX;
             yMax = worldY;
-            rand = new Random(seed);
             position = new Point(x, y);
             home = new Point(x, y);
         }
 
-        public override Point GetNext(Miner[,] world)
+        public override Point GetNext(Miner[,] world, Random rand)
         {
             int jumpsize = 1;
-            Miner next = DecideMove(world);
+            Miner next = DecideMove(world, rand);
 
             while (next.type != MinerType.Ore && next.position != position)
             {
@@ -35,7 +33,7 @@ namespace SMiners
             return next.position;
         }
 
-        private Miner DecideMove(Miner[,] world)
+        private Miner DecideMove(Miner[,] world, Random rand)
         {
             List<Miner> neighbors = GetNeumann(world);
             double temp;
