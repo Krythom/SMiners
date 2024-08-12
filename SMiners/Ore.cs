@@ -7,16 +7,16 @@ namespace SMiners
     {
         public Ore(int worldX, int worldY)
         {
-            color = new Color(0,0,0);
+            Color = new Color(0,0,0);
             direction = Direction.Up;
-            type = MinerType.Ore;
-            xMax = worldX;
-            yMax = worldY;
+            Type = MinerType.Ore;
+            _xMax = worldX;
+            _yMax = worldY;
         }
 
         public override Point GetNext(Miner[,] world, Random rand)
         {
-            return position;
+            return Position;
         }
     }
 }

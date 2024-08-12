@@ -6,15 +6,35 @@ namespace SMiners
 {
     public abstract class Miner
     {
-        public MinerType type;
+        private static readonly Point[] _Cardinals =
+        {
+            new(0, -1),
+            new(1, 0),
+            new(0, 1),
+            new(-1, 0)
+        };
+
+        private static readonly Point[] _ExtendedCardinals =
+        {
+            new(0, -1),
+            new(1, -1),
+            new(1, 0),
+            new(1, 1),
+            new(0, 1),
+            new(-1, 1),
+            new(-1, 0),
+            new(-1, -1)
+        };
+
+        public MinerType Type;
+        public Point Position;
+        public Color Color;
+        
         protected Direction direction;
         protected EightDirection eDirection;
-        private static readonly Point[] dir_lut = { new(0, -1), new(1, 0), new(0, 1), new(-1, 0) };
-        private static readonly Point[] edir_lut = { new(0, -1), new(1, -1), new(1, 0), new(1, 1), new(0,1), new(-1,1), new(-1,0), new(-1,-1) };
-        public Point position;
-        protected int xMax;
-        protected int yMax;
-        public Color color;
+        
+        protected int _xMax;
+        protected int _yMax;
 
         public abstract Point GetNext(Miner[,] world, Random rand);
 
@@ -22,34 +42,36 @@ namespace SMiners
         {
             Miner copy = (Miner) MemberwiseClone();
             copy.direction = direction;
-            copy.position = position;
-            copy.color = color;
-            copy.yMax = yMax;
-            copy.xMax = xMax;
+            copy.Position = Position;
+            copy.Color = Color;
+            copy._yMax = _yMax;
+            copy._xMax = _xMax;
             return copy;
         }
 
         protected Miner GetFront(Miner[,] world, int distance)
         {
-            Point dir = dir_lut[(int)direction];
-            Point target = new Point(position.X + dir.X * distance, position.Y + dir.Y * distance);
-            target.X = Mod(target.X, xMax);
-            target.Y = Mod(target.Y, yMax);
-            return world[target.X, target.Y];
+            Point dir = _Cardinals[(int) direction];
+            
+            return world[
+                Mod(Position.X + dir.X * distance, _xMax),
+                Mod(Position.Y + dir.Y * distance, _yMax)
+            ];
         }
-        
+
         protected Miner GetFrontEight(Miner[,] world, int distance)
         {
-            Point dir = edir_lut[(int)eDirection];
-            Point target = new Point(position.X + dir.X * distance, position.Y + dir.Y * distance);
-            target.X = Mod(target.X, xMax);
-            target.Y = Mod(target.Y, yMax);
-            return world[target.X, target.Y];
+            Point dir = _ExtendedCardinals[(int) eDirection];
+            
+            return world[
+                Mod(Position.X + dir.X * distance, _xMax),
+                Mod(Position.Y + dir.Y * distance, _yMax)
+            ];
         }
 
         public List<Miner> GetMoore(Miner[,] world)
         {
-            List<Miner> neighbors = new List<Miner>();
+            var neighbors = new List<Miner>();
 
             for (int x = -1; x <= 1; x++)
             {
@@ -57,7 +79,7 @@ namespace SMiners
                 {
                     if (!(x == 0 && y == 0))
                     {
-                        neighbors.Add(world[Mod(position.X + x, xMax), Mod(position.Y + y, yMax)]);
+                        neighbors.Add(world[Mod(Position.X + x, _xMax), Mod(Position.Y + y, _yMax)]);
                     }
                 }
             }
@@ -67,7 +89,7 @@ namespace SMiners
 
         protected List<Miner> GetNeumann(Miner[,] world)
         {
-            List<Miner> neighbors = new List<Miner>();
+            var neighbors = new List<Miner>();
 
             for (int x = -1; x <= 1; x++)
             {
@@ -75,7 +97,7 @@ namespace SMiners
                 {
                     if (x != y && x != -y)
                     {
-                        neighbors.Add(world[Mod(position.X + x, xMax), Mod(position.Y + y, yMax)]);
+                        neighbors.Add(world[Mod(Position.X + x, _xMax), Mod(Position.Y + y, _yMax)]);
                     }
                 }
             }
@@ -103,7 +125,7 @@ namespace SMiners
             Down,
             Left
         }
-        
+
         public enum EightDirection
         {
             U,
@@ -115,6 +137,5 @@ namespace SMiners
             L,
             UL
         }
-
     }
 }
