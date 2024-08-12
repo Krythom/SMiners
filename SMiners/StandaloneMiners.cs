@@ -18,7 +18,9 @@ namespace SMiners
         private GraphicsDeviceManager _graphics;
         private SpriteBatch _spriteBatch;
         List<Miner> _changed;
-        readonly Random rand = new();
+        Random seeder = new Random();
+        int seed;
+        Random rand;
         Texture2D square;
         Miner[,] world;
         Color startCol;
@@ -45,17 +47,19 @@ namespace SMiners
         protected override void Initialize()
         {
             //config
+            seed = seeder.Next();
+            rand = new Random(seed);
             worldX = 1000;
             worldY = 1000;
             cellSize = 1;
             mutationStrength = 1;
-            rarity = 0.99999;
-            batchMode = false;
+            rarity = 0.9999;
+            batchMode = true;
             startCol = new Color(rand.Next(256), rand.Next(256), rand.Next(256));
 
             InitWorld();
-            _graphics.PreferredBackBufferHeight = (worldY * cellSize);
-            _graphics.PreferredBackBufferWidth = (worldX * cellSize);
+            _graphics.PreferredBackBufferHeight = 1000;
+            _graphics.PreferredBackBufferWidth = 1000;
             _graphics.SynchronizeWithVerticalRetrace = false;
             _graphics.ApplyChanges();
 
@@ -87,7 +91,7 @@ namespace SMiners
                 }
                 if (!batchMode)
                 {
-                    Exit();
+                    return;
                 }
 
                 completed = false;
@@ -101,7 +105,6 @@ namespace SMiners
                 iterations++;
             }
 
-
             if(iterations % 100 != 0)
             {
                 SuppressDraw();
@@ -111,7 +114,6 @@ namespace SMiners
             Debug.WriteLine(
                 "fps: " + (1000 / ms) + " (" + ms + "ms)" + " iterations: " + iterations + " active " + checkSet.Count
             );
-
 
             base.Update(gameTime);
         }
@@ -144,9 +146,8 @@ namespace SMiners
                 {
                     if (rand.NextDouble() > rarity)
                     {
-                        Miner added = new DiamondMiner(startCol, worldX, worldY);
+                        Miner added = new EightMiner(startCol, worldX, worldY, x, y, rand.Next());
                         world[x, y] = added;
-                        world[x, y].position = new Point(x, y);
                         checkSet.Add(new Point(x, y));
                     }
                     else
@@ -162,16 +163,12 @@ namespace SMiners
         {
             HashSet<Point> toWake = new();
             HashSet<Point> toSleep = new();
-            
-            startCol = new Color(
-                startCol.R + rand.Next(-mutationStrength, mutationStrength + 1),
-                startCol.G + rand.Next(-mutationStrength, mutationStrength + 1),
-                startCol.B + rand.Next(-mutationStrength, mutationStrength + 1)
-            );
+
+            startCol = RandomShift(startCol);
 
             foreach (Point loc in checkSet)
             {
-                Miner m = (Miner) world[(int) loc.X, (int) loc.Y].DeepCopy();
+                Miner m = (Miner) world[loc.X, loc.Y].DeepCopy();
                 Point next = m.GetNext(world);
 
                 if (m.position == next)
@@ -190,7 +187,7 @@ namespace SMiners
 
             foreach (Miner m in _changed)
             {
-                world[(int)m.position.X, (int)m.position.Y] = m;
+                world[m.position.X, m.position.Y] = m;
                 m.color = startCol;
             }
 
@@ -207,7 +204,7 @@ namespace SMiners
                 for (int y = 0; y < worldY; y++)
                 {
                     Miner current = world[x, y];
-                    neighbors = current.GetNeumann(world);
+                    neighbors = current.GetMoore(world);
                     int lowest = 999;
                     foreach (Miner m in neighbors)
                     {
@@ -225,6 +222,30 @@ namespace SMiners
             }
         }
 
+        private Color RandomShift(Color col)
+        {
+            return new Color(
+            col.R + seeder.Next(-mutationStrength, mutationStrength + 1),
+            col.G + seeder.Next(-mutationStrength, mutationStrength + 1),
+            col.B + seeder.Next(-mutationStrength, mutationStrength + 1)
+            );
+        }
+
+        private Color ConnectedShift(Color col)
+        {
+            int change = seeder.Next(-mutationStrength, mutationStrength + 1);
+            return new Color(
+            col.R + change,
+            col.G + change,
+            col.B + change
+            );
+        }
+
+        private Color FromPalette()
+        {
+            return Color.Aqua;
+        }
+
         private void SaveImage()
         {
             var img = new Image<Rgba32>(worldX, worldY);
@@ -238,7 +259,7 @@ namespace SMiners
             }
 
             img.Save(
-                "ScreenCap_v" + rand.Next(10) + "_i" + iterations + ".png",
+                "s" + seed + "_v" + mutationStrength + "_r" + rarity + "_i" + iterations + ".png",
                 new PngEncoder()
             );
         }

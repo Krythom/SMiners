@@ -7,15 +7,15 @@ using System.Threading.Tasks;
 
 namespace SMiners
 {
-    internal class DiamondMiner : Miner
+    internal class EightMiner : Miner
     {
         Random rand;
 
-        public DiamondMiner(Color col, int worldX, int worldY, int x, int y, int seed)
+        public EightMiner(Color col, int worldX, int worldY, int x, int y, int seed)
         {
             color = col;
-            direction = Direction.Up;
-            type = MinerType.Diamond;
+            eDirection = EightDirection.U;
+            type = MinerType.Eight;
             xMax = worldX;
             yMax = worldY;
             rand = new Random(seed);
@@ -30,7 +30,7 @@ namespace SMiners
             while (next.type != MinerType.Ore && next.position != position)
             {
                 jumpsize++;
-                next = GetFront(world, jumpsize);
+                next = GetFrontEight(world, jumpsize);
             }
 
             return next.position;
@@ -38,16 +38,16 @@ namespace SMiners
 
         private Miner DecideMove(Miner[,] world)
         {
-            direction = (Direction)(((int)direction + 1) % 4);
+            eDirection = (EightDirection)(((int)eDirection + 1) % 8);
 
-            Miner m_pos = GetFront(world, 1);
-            if (m_pos.type != MinerType.Diamond) return m_pos;
+            Miner m_pos = GetFrontEight(world, 1);
+            if (m_pos.type == MinerType.Ore) return m_pos;
 
-            direction = (Direction)(((int)direction + 2) % 4);
-            Miner m_neg = GetFront(world, 1);
-            if (m_neg.type != MinerType.Diamond) return m_neg;
+            eDirection = (EightDirection)(((int)eDirection + 1) % 8);
+            Miner m_neg = GetFrontEight(world, 1);
+            if (m_neg.type == MinerType.Ore) return m_neg;
 
-            return (rand.Next(2) == 1) ? m_pos : m_neg ;
+            return (rand.Next(2) == 1) ? m_pos : m_neg;
         }
     }
 }
