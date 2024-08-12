@@ -97,6 +97,7 @@ namespace SMiners
 
                 completed = false;
                 saved = false;
+                
                 Initialize();
                 iterations = 0;
             }
@@ -244,20 +245,26 @@ namespace SMiners
 
         private void SaveImage()
         {
-            var img = new Image<Rgba32>(worldX, worldY);
-
-            for (int x = 0; x < worldX; x++)
+            unsafe
             {
-                for (int y = 0; y < worldY; y++)
+                fixed (void* ptr = _backingColors)
                 {
-                    img[x, y] = new Rgba32(world[x, y].color.PackedValue);
+
+                    Image<Rgba32> img = Image.WrapMemory<Rgba32>(
+                        ptr,
+                        _backingColors.AsSpan().AsBytes().Length,
+                        worldX,
+                        worldY
+                    );
+
+                    string date = DateTime.Now.ToString("s").Replace("T", " ").Replace(":", "-");
+
+                    img.Save(
+                        $"{date}s{seed}_v{mutationStrength}_r{rarity}_i{iterations}.png",
+                        new PngEncoder()
+                    );
                 }
             }
-
-            img.Save(
-                "s" + seed + "_v" + mutationStrength + "_r" + rarity + "_i" + iterations + ".png",
-                new PngEncoder()
-            );
         }
     }
 }
