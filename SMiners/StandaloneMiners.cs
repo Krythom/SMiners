@@ -20,7 +20,6 @@ namespace SMiners
         private Texture2D _tex;
         private int seed;
         private Random rand;
-        private Texture2D square;
         private Miner[,] world;
         private Color startCol;
         private int worldX;
@@ -70,7 +69,6 @@ namespace SMiners
         protected override void LoadContent()
         {
             _spriteBatch = new SpriteBatch(GraphicsDevice);
-            square = Content.Load<Texture2D>("whiteSquare");
         }
 
         protected override void Update(GameTime gameTime)
