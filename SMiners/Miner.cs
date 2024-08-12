@@ -87,7 +87,7 @@ namespace SMiners
             return neighbors;
         }
 
-        protected List<Miner> GetNeumann(Miner[,] world)
+        public List<Miner> GetNeumann(Miner[,] world)
         {
             var neighbors = new List<Miner>();
 

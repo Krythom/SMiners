@@ -17,7 +17,7 @@ namespace SMiners
         private const int WorldX = 1000;
         private const int WorldY = 1000;
         private const int MutationStrength = 1;
-        private const double Rarity = 0.9999;
+        private const double Rarity = 0.99998;
         private const bool BatchMode = true;
         
         private readonly GraphicsDeviceManager _graphics;
@@ -82,6 +82,8 @@ namespace SMiners
             {
                 if (!_saved)
                 {
+                    SaveImage();
+                    _iterations++;
                     Cleanup();
                     SaveImage();
                     _saved = true;
@@ -139,7 +141,8 @@ namespace SMiners
                 {
                     if (rand.NextDouble() > Rarity)
                     {
-                        Miner added = new EightMiner(_startCol, WorldX, WorldY, x, y, rand);
+                        Miner added = new DiamondMiner(_startCol, WorldX, WorldY, x, y);
+                        _colors.Span[x, y] = _startCol;
                         world[x, y] = added;
                         _checkSet.Add(new Point(x, y));
                     }
@@ -195,20 +198,23 @@ namespace SMiners
                 for (int y = 0; y < WorldY; y++)
                 {
                     Miner current = world[x, y];
-                    var neighbors = current.GetMoore(world);
+                    var neighbors = current.GetNeumann(world);
                     
-                    int lowest = 999;
+                    int lowest = int.MaxValue;
                     
                     foreach (Miner m in neighbors)
                     {
                         int colorDist = Math.Abs(m.Color.R - current.Color.R) + Math.Abs(m.Color.G - current.Color.G) +
                                         Math.Abs(m.Color.B - current.Color.B);
 
-                        lowest = Math.Max(colorDist, lowest);
+                        lowest = Math.Min(colorDist, lowest);
                     }
 
                     if (lowest > 3 * MutationStrength)
+                    {
                         current.Color = neighbors[rand.Next(4)].Color;
+                        _colors.Span[current.Position.X, current.Position.Y] = current.Color;
+                    }
                 }
             }
         }
@@ -230,11 +236,6 @@ namespace SMiners
                 col.G + change,
                 col.B + change
             );
-        }
-
-        private Color FromPalette()
-        {
-            return Color.Aqua;
         }
 
         private void SaveImage()

@@ -38,7 +38,7 @@ namespace SMiners
             if (m_pos.Type == MinerType.Ore) 
                 return m_pos;
 
-            eDirection = eDirection.Next();
+            eDirection = eDirection.Next(7);
             
             Miner m_neg = GetFrontEight(world, 1);
             if (m_neg.Type == MinerType.Ore) 
