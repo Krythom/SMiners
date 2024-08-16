@@ -19,8 +19,11 @@ namespace SMiners
         private const int WorldY = 2000;
         private const int MutationStrength = 1;
         private const double Rarity = 0.999997;
-        private const int _speedup = 100;
         private const bool BatchMode = true;
+
+        //0 to skip drawing, 1 for base speed, higher for faster
+        private const int _speedup = 0;
+
         
         private readonly GraphicsDeviceManager _graphics;
         private SpriteBatch _spriteBatch;
@@ -64,10 +67,6 @@ namespace SMiners
             _graphics.ApplyChanges();
 
             InactiveSleepTime = new TimeSpan(0);
-
-            foreach (ref Color c in _backingColors.AsSpan())
-                c = Color.Black;
-
             base.Initialize();
         }
 
@@ -96,19 +95,14 @@ namespace SMiners
 
                 _completed = false;
                 _saved = false;
-
                 Initialize();
-
-                foreach (ref Color c in _backingColors.AsSpan())
-                    c = Color.Black;
-                
                 _iterations = 0;
             }
             else
             {
                 Iterate();
                 _iterations++;
-                if (_iterations % _speedup != 0)
+                if (_speedup == 0 || _iterations % _speedup != 0)
                 {
                     SuppressDraw();
                 }
@@ -140,6 +134,9 @@ namespace SMiners
             _backingColors = new Color[WorldX * WorldY];
             _colors = new Memory2D<Color>(_backingColors, WorldX, WorldY);
             _tex = new Texture2D(GraphicsDevice, WorldX, WorldY);
+
+            foreach (ref Color c in _backingColors.AsSpan())
+                c = Color.Black;
 
             for (int x = 0; x < WorldX; x++)
             {
