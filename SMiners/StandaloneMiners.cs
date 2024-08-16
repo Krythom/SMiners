@@ -9,15 +9,17 @@ using SixLabors.ImageSharp.Formats.Png;
 using SixLabors.ImageSharp.PixelFormats;
 using Color = Microsoft.Xna.Framework.Color;
 using Point = Microsoft.Xna.Framework.Point;
+using Rectangle = Microsoft.Xna.Framework.Rectangle;
 
 namespace SMiners
 {
     public class StandaloneMiners : Game
     {
-        private const int WorldX = 1000;
-        private const int WorldY = 1000;
+        private const int WorldX = 2000;
+        private const int WorldY = 2000;
         private const int MutationStrength = 1;
-        private const double Rarity = 0.99998;
+        private const double Rarity = 0.999997;
+        private const int _speedup = 100;
         private const bool BatchMode = true;
         
         private readonly GraphicsDeviceManager _graphics;
@@ -63,6 +65,9 @@ namespace SMiners
 
             InactiveSleepTime = new TimeSpan(0);
 
+            foreach (ref Color c in _backingColors.AsSpan())
+                c = Color.Black;
+
             base.Initialize();
         }
 
@@ -82,9 +87,6 @@ namespace SMiners
             {
                 if (!_saved)
                 {
-                    SaveImage();
-                    _iterations++;
-                    Cleanup();
                     SaveImage();
                     _saved = true;
                 }
@@ -106,6 +108,10 @@ namespace SMiners
             {
                 Iterate();
                 _iterations++;
+                if (_iterations % _speedup != 0)
+                {
+                    SuppressDraw();
+                }
             }
 
             double ms = gameTime.ElapsedGameTime.TotalMilliseconds;
@@ -121,7 +127,7 @@ namespace SMiners
             _spriteBatch.Begin();
 
             _tex.SetData(_backingColors);
-            _spriteBatch.Draw(_tex, new Vector2(0, 0), Color.White);
+            _spriteBatch.Draw(_tex, new Rectangle(0,0,1000,1000), Color.White);
 
             _spriteBatch.End();
 

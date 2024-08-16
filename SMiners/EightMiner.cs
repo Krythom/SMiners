@@ -5,14 +5,19 @@ namespace SMiners
 {
     internal class EightMiner : Miner
     {
-        public EightMiner(Color col, int worldX, int worldY, int x, int y, Random random)
+        private int a;
+        private int b;
+
+        public EightMiner(Color col, int worldX, int worldY, int x, int y, int dir, int a, int b)
         {
             Color = col;
-            eDirection = EightDirection.U;
+            eDirection = (EightDirection) dir;
             Type = MinerType.Eight;
             _xMax = worldX;
             _yMax = worldY;
             Position = new Point(x, y);
+            this.a = a;
+            this.b = b;
         }
 
         public override Point GetNext(Miner[,] world, Random rand)
@@ -32,13 +37,13 @@ namespace SMiners
 
         private Miner DecideMove(Miner[,] world, Random rand)
         {
-            eDirection = eDirection.Next();
+            eDirection = eDirection.Next(a);
 
             Miner m_pos = GetFrontEight(world, 1);
             if (m_pos.Type == MinerType.Ore) 
                 return m_pos;
 
-            eDirection = eDirection.Next(7);
+            eDirection = eDirection.Next(b);
             
             Miner m_neg = GetFrontEight(world, 1);
             if (m_neg.Type == MinerType.Ore) 
