@@ -15,14 +15,14 @@ namespace SMiners
 {
     public class StandaloneMiners : Game
     {
-        private const int WorldX = 2000;
-        private const int WorldY = 2000;
-        private const int MutationStrength = 1;
-        private const double Rarity = 0.999997;
+        private const int WorldX = 5000;
+        private const int WorldY = 5000;
+        private const float MutationStrength = 0.2f;
+        private const double Rarity = 0.9999997;
         private const bool BatchMode = true;
 
         //0 to skip drawing, 1 for base speed, higher for faster
-        private const int _speedup = 0;
+        private const int _speedup = 1000;
 
         
         private readonly GraphicsDeviceManager _graphics;
@@ -35,7 +35,7 @@ namespace SMiners
         private readonly List<Miner> _changed;
         private HashSet<Point> _checkSet = [];
         
-        private Color _startCol;
+        private Vector3 _startCol;
         
         private bool _completed;
         private bool _saved;
@@ -58,7 +58,7 @@ namespace SMiners
         {
             seed = Environment.TickCount;
             rand = new Random(seed);
-            _startCol = new Color(rand.Next(256), rand.Next(256), rand.Next(256));
+            _startCol = new Vector3(rand.Next(256), rand.Next(256), rand.Next(256));
 
             InitWorld();
             _graphics.PreferredBackBufferHeight = 1000;
@@ -86,6 +86,7 @@ namespace SMiners
             {
                 if (!_saved)
                 {
+                    Cleanup();
                     SaveImage();
                     _saved = true;
                 }
@@ -145,7 +146,7 @@ namespace SMiners
                     if (rand.NextDouble() > Rarity)
                     {
                         Miner added = new DiamondMiner(_startCol, WorldX, WorldY, x, y);
-                        _colors.Span[x, y] = _startCol;
+                        _colors.Span[x, y] = new Color((int) _startCol.X, (int) _startCol.Y, (int) _startCol.Z);
                         world[x, y] = added;
                         _checkSet.Add(new Point(x, y));
                     }
@@ -163,7 +164,14 @@ namespace SMiners
             HashSet<Point> toWake = [];
             HashSet<Point> toSleep = [];
 
-            _startCol = RandomShift(_startCol);
+            if (rand.NextDouble() > 1)
+            {
+                _startCol = ConnectedShift(_startCol);
+            }
+            else
+            {
+                _startCol = RandomShift(_startCol);
+            }
 
             foreach (Point loc in _checkSet)
             {
@@ -186,7 +194,8 @@ namespace SMiners
             {
                 var (x, y) = m.Position;
                 world[x, y] = m;
-                colors[x, y] = m.Color = _startCol;
+                m.Color = _startCol;
+                colors[x, y] = new Color((int) m.Color.X, (int) m.Color.Y, (int) m.Color.Z);
             }
 
             _checkSet = toWake;
@@ -203,12 +212,12 @@ namespace SMiners
                     Miner current = world[x, y];
                     var neighbors = current.GetNeumann(world);
                     
-                    int lowest = int.MaxValue;
+                    float lowest = float.MaxValue;
                     
                     foreach (Miner m in neighbors)
                     {
-                        int colorDist = Math.Abs(m.Color.R - current.Color.R) + Math.Abs(m.Color.G - current.Color.G) +
-                                        Math.Abs(m.Color.B - current.Color.B);
+                        float colorDist = Math.Abs(m.Color.X - current.Color.X) + Math.Abs(m.Color.Y - current.Color.Y) +
+                                        Math.Abs(m.Color.Z - current.Color.Z);
 
                         lowest = Math.Min(colorDist, lowest);
                     }
@@ -216,28 +225,28 @@ namespace SMiners
                     if (lowest > 3 * MutationStrength)
                     {
                         current.Color = neighbors[rand.Next(4)].Color;
-                        _colors.Span[current.Position.X, current.Position.Y] = current.Color;
+                        _colors.Span[current.Position.X, current.Position.Y] = new Color((int) current.Color.X, (int) current.Color.Y, (int) current.Color.Z);
                     }
                 }
             }
         }
 
-        private Color RandomShift(Color col)
+        private Vector3 RandomShift(Vector3 col)
         {
-            return new Color(
-                col.R + rand.Next(-MutationStrength, MutationStrength + 1),
-                col.G + rand.Next(-MutationStrength, MutationStrength + 1),
-                col.B + rand.Next(-MutationStrength, MutationStrength + 1)
+            return new Vector3(
+                Math.Clamp(col.X + (rand.NextSingle() * (MutationStrength + MutationStrength)) - MutationStrength, 0, 256),
+                Math.Clamp(col.Y + (rand.NextSingle() * (MutationStrength + MutationStrength)) - MutationStrength, 0, 256),
+                Math.Clamp(col.Z + (rand.NextSingle() * (MutationStrength + MutationStrength)) - MutationStrength, 0, 256)
             );
         }
 
-        private Color ConnectedShift(Color col)
+        private Vector3 ConnectedShift(Vector3 col)
         {
-            int change = rand.Next(-MutationStrength, MutationStrength + 1);
-            return new Color(
-                col.R + change,
-                col.G + change,
-                col.B + change
+            float change = (rand.NextSingle() * (MutationStrength + MutationStrength)) - MutationStrength;
+            return new Vector3(
+                Math.Clamp(col.X + change, 0, 256),
+                Math.Clamp(col.Y + change, 0, 256),
+                Math.Clamp(col.Z + change, 0, 256)
             );
         }
 

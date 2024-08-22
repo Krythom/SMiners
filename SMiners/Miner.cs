@@ -28,7 +28,7 @@ namespace SMiners
 
         public MinerType Type;
         public Point Position;
-        public Color Color;
+        public Vector3 Color;
         
         protected Direction direction;
         protected EightDirection eDirection;
