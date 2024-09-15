@@ -15,14 +15,15 @@ namespace SMiners
 {
     public class StandaloneMiners : Game
     {
-        private const int WorldX = 5000;
-        private const int WorldY = 5000;
-        private const float MutationStrength = 0.2f;
-        private const double Rarity = 0.9999997;
+        private const int WorldX = 3000;
+        private const int WorldY = 3000;
+        private const float MutationStrength = 0.5f;
+        private const double Rarity = 0.999999;
         private const bool BatchMode = true;
+        private const bool UseHSL = false;
 
         //0 to skip drawing, 1 for base speed, higher for faster
-        private const int _speedup = 1000;
+        private const int _speedup = 500;
 
         
         private readonly GraphicsDeviceManager _graphics;
@@ -86,7 +87,6 @@ namespace SMiners
             {
                 if (!_saved)
                 {
-                    Cleanup();
                     SaveImage();
                     _saved = true;
                 }
@@ -145,8 +145,13 @@ namespace SMiners
                 {
                     if (rand.NextDouble() > Rarity)
                     {
-                        Miner added = new DiamondMiner(_startCol, WorldX, WorldY, x, y);
-                        _colors.Span[x, y] = new Color((int) _startCol.X, (int) _startCol.Y, (int) _startCol.Z);
+                        Miner added = new DiamondMiner(HslConvert(_startCol), WorldX, WorldY, x, y);
+                        if (UseHSL)
+                        {
+                            added.Color = HslConvert(added.Color);
+                        }
+
+                        _colors.Span[x, y] = new Color((int) added.Color.X, (int) added.Color.Y, (int) added.Color.Z);
                         world[x, y] = added;
                         _checkSet.Add(new Point(x, y));
                     }
@@ -194,7 +199,16 @@ namespace SMiners
             {
                 var (x, y) = m.Position;
                 world[x, y] = m;
-                m.Color = _startCol;
+
+                if (UseHSL)
+                {
+                    m.Color = HslConvert(_startCol);
+                }
+                else
+                {
+                    m.Color = _startCol;
+                }
+
                 colors[x, y] = new Color((int) m.Color.X, (int) m.Color.Y, (int) m.Color.Z);
             }
 
@@ -233,21 +247,45 @@ namespace SMiners
 
         private Vector3 RandomShift(Vector3 col)
         {
-            return new Vector3(
-                Math.Clamp(col.X + (rand.NextSingle() * (MutationStrength + MutationStrength)) - MutationStrength, 0, 256),
-                Math.Clamp(col.Y + (rand.NextSingle() * (MutationStrength + MutationStrength)) - MutationStrength, 0, 256),
-                Math.Clamp(col.Z + (rand.NextSingle() * (MutationStrength + MutationStrength)) - MutationStrength, 0, 256)
-            );
+            if (UseHSL)
+            {
+                return new Vector3(
+                    (col.X + (rand.NextSingle() * (MutationStrength + MutationStrength)) - MutationStrength) % 360,
+                    Math.Clamp(col.Y + (rand.NextSingle() * (MutationStrength + MutationStrength)) - MutationStrength, 0, 256),
+                    Math.Clamp(col.Z + (rand.NextSingle() * (MutationStrength + MutationStrength)) - MutationStrength, 0, 256)
+                );
+            }
+            else
+            {
+                return new Vector3(
+                    Math.Clamp(col.X + (rand.NextSingle() * (MutationStrength + MutationStrength)) - MutationStrength, 0, 256),
+                    Math.Clamp(col.Y + (rand.NextSingle() * (MutationStrength + MutationStrength)) - MutationStrength, 0, 256),
+                    Math.Clamp(col.Z + (rand.NextSingle() * (MutationStrength + MutationStrength)) - MutationStrength, 0, 256)
+                );
+            }
         }
 
         private Vector3 ConnectedShift(Vector3 col)
         {
             float change = (rand.NextSingle() * (MutationStrength + MutationStrength)) - MutationStrength;
-            return new Vector3(
-                Math.Clamp(col.X + change, 0, 256),
-                Math.Clamp(col.Y + change, 0, 256),
-                Math.Clamp(col.Z + change, 0, 256)
-            );
+
+            if (UseHSL)
+            {
+                return new Vector3(
+                    (col.X + change) % 360,
+                    Math.Clamp(col.Y + change, 0, 256),
+                    Math.Clamp(col.Z + change, 0, 256)
+                );
+            }
+            else
+            {
+                return new Vector3(
+                    Math.Clamp(col.X + change, 0, 256),
+                    Math.Clamp(col.Y + change, 0, 256),
+                    Math.Clamp(col.Z + change, 0, 256)
+                );
+            }
+
         }
 
         private void SaveImage()
@@ -271,6 +309,52 @@ namespace SMiners
                     );
                 }
             }
+        }
+
+        private Vector3 HslConvert(Vector3 col)
+        {
+            col = RangeAdjust(col);
+
+            float c = (1 - Math.Abs((2 * col.Z) - 1)) * col.Y;
+            float h = col.X / 60;
+            float q = c * (1 - Math.Abs((h % 2) - 1));
+            float m = col.Z - c / 2;
+
+            Vector3 newCol;
+
+            if (h <=1)
+            {
+                newCol = new Vector3(c, q, 0);
+            }
+            else if (h <= 2)
+            {
+                newCol = new Vector3(q, c, 0);
+            }
+            else if (h <= 3)
+            {
+                newCol = new Vector3(0, c, q);
+            }
+            else if (h <= 4)
+            {
+                newCol = new Vector3(0, q, c);
+            }
+            else if (h <= 5)
+            {
+                newCol = new Vector3(q, 0, c);
+            }
+            else
+            {
+                newCol = new Vector3(c, 0, q);
+            }
+
+            newCol = new Vector3(newCol.X + m, newCol.Y + m, newCol.Z + m);
+            newCol *= 255;
+            return newCol;
+        }
+
+        private Vector3 RangeAdjust(Vector3 col)
+        {
+            return new Vector3(360 * col.X/255, col.Y/255, col.Z/255);
         }
     }
 }
