@@ -8,7 +8,7 @@ namespace SMiners
         private int a;
         private int b;
 
-        public EightMiner(Vector3 col, int worldX, int worldY, int x, int y, int dir, int a, int b)
+        public EightMiner(MinerColor col, int worldX, int worldY, int x, int y, int dir, int a, int b)
         {
             Color = col;
             eDirection = (EightDirection) dir;

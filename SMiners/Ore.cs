@@ -7,7 +7,6 @@ namespace SMiners
     {
         public Ore(int worldX, int worldY)
         {
-            Color = new Vector3(0,0,0);
             direction = Direction.Up;
             Type = MinerType.Ore;
             _xMax = worldX;

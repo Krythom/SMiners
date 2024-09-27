@@ -15,15 +15,15 @@ namespace SMiners
 {
     public class StandaloneMiners : Game
     {
-        private const int WorldX = 3000;
-        private const int WorldY = 3000;
-        private const float MutationStrength = 0.5f;
-        private const double Rarity = 0.999999;
+        private const int WorldX = 2000;
+        private const int WorldY = 2000;
+        private const float MutationStrength = 0.2f;
+        private const double Rarity = 0.999995;
         private const bool BatchMode = true;
-        private const bool UseHSL = false;
+        private const bool UseHSL = true;
 
         //0 to skip drawing, 1 for base speed, higher for faster
-        private const int _speedup = 500;
+        private const int _speedup = 100;
 
         
         private readonly GraphicsDeviceManager _graphics;
@@ -36,7 +36,7 @@ namespace SMiners
         private readonly List<Miner> _changed;
         private HashSet<Point> _checkSet = [];
         
-        private Vector3 _startCol;
+        private MinerColor _startCol;
         
         private bool _completed;
         private bool _saved;
@@ -59,7 +59,7 @@ namespace SMiners
         {
             seed = Environment.TickCount;
             rand = new Random(seed);
-            _startCol = new Vector3(rand.Next(256), rand.Next(256), rand.Next(256));
+            _startCol = new HSL(rand.Next(360), rand.NextSingle(), rand.NextSingle());
 
             InitWorld();
             _graphics.PreferredBackBufferHeight = 1000;
@@ -92,7 +92,9 @@ namespace SMiners
                 }
 
                 if (!BatchMode)
+                {
                     return;
+                }
 
                 _completed = false;
                 _saved = false;
@@ -145,13 +147,9 @@ namespace SMiners
                 {
                     if (rand.NextDouble() > Rarity)
                     {
-                        Miner added = new DiamondMiner(HslConvert(_startCol), WorldX, WorldY, x, y);
-                        if (UseHSL)
-                        {
-                            added.Color = HslConvert(added.Color);
-                        }
+                        Miner added = new DiamondMiner(_startCol, WorldX, WorldY, x, y);
 
-                        _colors.Span[x, y] = new Color((int) added.Color.X, (int) added.Color.Y, (int) added.Color.Z);
+                        _colors.Span[x, y] = added.Color.ToColor();
                         world[x, y] = added;
                         _checkSet.Add(new Point(x, y));
                     }
@@ -169,14 +167,7 @@ namespace SMiners
             HashSet<Point> toWake = [];
             HashSet<Point> toSleep = [];
 
-            if (rand.NextDouble() > 1)
-            {
-                _startCol = ConnectedShift(_startCol);
-            }
-            else
-            {
-                _startCol = RandomShift(_startCol);
-            }
+            _startCol.Mutate(MutationStrength, rand);
 
             foreach (Point loc in _checkSet)
             {
@@ -199,17 +190,8 @@ namespace SMiners
             {
                 var (x, y) = m.Position;
                 world[x, y] = m;
-
-                if (UseHSL)
-                {
-                    m.Color = HslConvert(_startCol);
-                }
-                else
-                {
-                    m.Color = _startCol;
-                }
-
-                colors[x, y] = new Color((int) m.Color.X, (int) m.Color.Y, (int) m.Color.Z);
+                m.Color = _startCol;
+                colors[x, y] = _startCol.ToColor();
             }
 
             _checkSet = toWake;
@@ -226,66 +208,22 @@ namespace SMiners
                     Miner current = world[x, y];
                     var neighbors = current.GetNeumann(world);
                     
-                    float lowest = float.MaxValue;
+                    double lowest = float.MaxValue;
+                    double colorDist;
                     
                     foreach (Miner m in neighbors)
                     {
-                        float colorDist = Math.Abs(m.Color.X - current.Color.X) + Math.Abs(m.Color.Y - current.Color.Y) +
-                                        Math.Abs(m.Color.Z - current.Color.Z);
-
+                        colorDist = current.Color.GetDistance(m.Color);
                         lowest = Math.Min(colorDist, lowest);
                     }
 
                     if (lowest > 3 * MutationStrength)
                     {
                         current.Color = neighbors[rand.Next(4)].Color;
-                        _colors.Span[current.Position.X, current.Position.Y] = new Color((int) current.Color.X, (int) current.Color.Y, (int) current.Color.Z);
+                        _colors.Span[current.Position.X, current.Position.Y] = current.Color.ToColor();
                     }
                 }
             }
-        }
-
-        private Vector3 RandomShift(Vector3 col)
-        {
-            if (UseHSL)
-            {
-                return new Vector3(
-                    (col.X + (rand.NextSingle() * (MutationStrength + MutationStrength)) - MutationStrength) % 360,
-                    Math.Clamp(col.Y + (rand.NextSingle() * (MutationStrength + MutationStrength)) - MutationStrength, 0, 256),
-                    Math.Clamp(col.Z + (rand.NextSingle() * (MutationStrength + MutationStrength)) - MutationStrength, 0, 256)
-                );
-            }
-            else
-            {
-                return new Vector3(
-                    Math.Clamp(col.X + (rand.NextSingle() * (MutationStrength + MutationStrength)) - MutationStrength, 0, 256),
-                    Math.Clamp(col.Y + (rand.NextSingle() * (MutationStrength + MutationStrength)) - MutationStrength, 0, 256),
-                    Math.Clamp(col.Z + (rand.NextSingle() * (MutationStrength + MutationStrength)) - MutationStrength, 0, 256)
-                );
-            }
-        }
-
-        private Vector3 ConnectedShift(Vector3 col)
-        {
-            float change = (rand.NextSingle() * (MutationStrength + MutationStrength)) - MutationStrength;
-
-            if (UseHSL)
-            {
-                return new Vector3(
-                    (col.X + change) % 360,
-                    Math.Clamp(col.Y + change, 0, 256),
-                    Math.Clamp(col.Z + change, 0, 256)
-                );
-            }
-            else
-            {
-                return new Vector3(
-                    Math.Clamp(col.X + change, 0, 256),
-                    Math.Clamp(col.Y + change, 0, 256),
-                    Math.Clamp(col.Z + change, 0, 256)
-                );
-            }
-
         }
 
         private void SaveImage()
@@ -304,57 +242,11 @@ namespace SMiners
                     string date = DateTime.Now.ToString("s").Replace("T", " ").Replace(":", "-");
 
                     img.Save(
-                        $"{date}s{seed}_v{MutationStrength}_r{Rarity}_i{_iterations}.png",
+                        $"_i{_iterations}.png",
                         new PngEncoder()
                     );
                 }
             }
-        }
-
-        private Vector3 HslConvert(Vector3 col)
-        {
-            col = RangeAdjust(col);
-
-            float c = (1 - Math.Abs((2 * col.Z) - 1)) * col.Y;
-            float h = col.X / 60;
-            float q = c * (1 - Math.Abs((h % 2) - 1));
-            float m = col.Z - c / 2;
-
-            Vector3 newCol;
-
-            if (h <=1)
-            {
-                newCol = new Vector3(c, q, 0);
-            }
-            else if (h <= 2)
-            {
-                newCol = new Vector3(q, c, 0);
-            }
-            else if (h <= 3)
-            {
-                newCol = new Vector3(0, c, q);
-            }
-            else if (h <= 4)
-            {
-                newCol = new Vector3(0, q, c);
-            }
-            else if (h <= 5)
-            {
-                newCol = new Vector3(q, 0, c);
-            }
-            else
-            {
-                newCol = new Vector3(c, 0, q);
-            }
-
-            newCol = new Vector3(newCol.X + m, newCol.Y + m, newCol.Z + m);
-            newCol *= 255;
-            return newCol;
-        }
-
-        private Vector3 RangeAdjust(Vector3 col)
-        {
-            return new Vector3(360 * col.X/255, col.Y/255, col.Z/255);
         }
     }
 }

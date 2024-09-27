@@ -7,7 +7,7 @@ namespace SMiners
     {
         private readonly Point _home;
 
-        public HomeMiner(Vector3 col, int worldX, int worldY, int x, int y)
+        public HomeMiner(MinerColor col, int worldX, int worldY, int x, int y)
         {
             Color = col;
             direction = Direction.Up;
